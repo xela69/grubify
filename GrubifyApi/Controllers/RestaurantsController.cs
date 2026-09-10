@@ -78,6 +78,48 @@ namespace GrubifyApi.Controllers
                 MinimumOrder = 10.00m,
                 IsOpen = true,
                 Address = "654 Health St, Northside"
+            },
+            new Restaurant
+            {
+                Id = 6,
+                Name = "Golden Dragon",
+                Description = "Classic Chinese favorites, wok-fired with bold flavors",
+                ImageUrl = "https://images.unsplash.com/photo-1525755662778-989d0524087e?w=800&h=600&fit=crop",
+                CuisineType = "Chinese",
+                Rating = 4.6,
+                DeliveryTime = "25-40 min",
+                DeliveryFee = 2.49m,
+                MinimumOrder = 15.00m,
+                IsOpen = true,
+                Address = "88 Dragon Way, Chinatown"
+            },
+            new Restaurant
+            {
+                Id = 7,
+                Name = "El Mariachi",
+                Description = "Authentic Mexican street food, tacos, and burritos",
+                ImageUrl = "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=600&fit=crop",
+                CuisineType = "Mexican",
+                Rating = 4.7,
+                DeliveryTime = "20-35 min",
+                DeliveryFee = 2.99m,
+                MinimumOrder = 12.00m,
+                IsOpen = true,
+                Address = "212 Fiesta Ave, Southside"
+            },
+            new Restaurant
+            {
+                Id = 8,
+                Name = "Bangkok Thai",
+                Description = "Fragrant Thai curries, noodles, and street classics",
+                ImageUrl = "https://images.unsplash.com/photo-1559314809-0d155014e29e?w=800&h=600&fit=crop",
+                CuisineType = "Thai",
+                Rating = 4.8,
+                DeliveryTime = "30-45 min",
+                DeliveryFee = 3.49m,
+                MinimumOrder = 18.00m,
+                IsOpen = true,
+                Address = "9 Lotus Lane, Riverside"
             }
         };
 

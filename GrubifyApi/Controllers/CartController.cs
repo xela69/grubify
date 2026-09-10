@@ -135,7 +135,16 @@ namespace GrubifyApi.Controllers
                 new FoodItem { Id = 12, Name = "Sweet Potato Fries", Price = 6.99m, ImageUrl = "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop", RestaurantId = 4 },
                 new FoodItem { Id = 13, Name = "Quinoa Buddha Bowl", Price = 14.99m, ImageUrl = "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop", RestaurantId = 5 },
                 new FoodItem { Id = 14, Name = "Acai Berry Smoothie", Price = 8.99m, ImageUrl = "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=400&h=300&fit=crop", RestaurantId = 5 },
-                new FoodItem { Id = 15, Name = "Grilled Salmon Salad", Price = 18.99m, ImageUrl = "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop", RestaurantId = 5 }
+                new FoodItem { Id = 15, Name = "Grilled Salmon Salad", Price = 18.99m, ImageUrl = "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop", RestaurantId = 5 },
+                new FoodItem { Id = 16, Name = "Kung Pao Chicken", Price = 15.99m, ImageUrl = "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop", RestaurantId = 6 },
+                new FoodItem { Id = 17, Name = "Vegetable Spring Rolls", Price = 6.99m, ImageUrl = "https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=400&h=300&fit=crop", RestaurantId = 6 },
+                new FoodItem { Id = 18, Name = "Beef Chow Mein", Price = 14.99m, ImageUrl = "https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=400&h=300&fit=crop", RestaurantId = 6 },
+                new FoodItem { Id = 19, Name = "Chicken Tacos", Price = 11.99m, ImageUrl = "https://images.unsplash.com/photo-1611250188496-e966043a0629?w=400&h=300&fit=crop", RestaurantId = 7 },
+                new FoodItem { Id = 20, Name = "Beef Burrito", Price = 13.99m, ImageUrl = "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400&h=300&fit=crop", RestaurantId = 7 },
+                new FoodItem { Id = 21, Name = "Guacamole & Chips", Price = 7.99m, ImageUrl = "https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=400&h=300&fit=crop", RestaurantId = 7 },
+                new FoodItem { Id = 22, Name = "Pad Thai", Price = 16.99m, ImageUrl = "https://images.unsplash.com/photo-1637806930600-37fa8892069d?w=400&h=300&fit=crop", RestaurantId = 8 },
+                new FoodItem { Id = 23, Name = "Green Curry", Price = 17.99m, ImageUrl = "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop", RestaurantId = 8 },
+                new FoodItem { Id = 24, Name = "Thai Spring Rolls", Price = 6.99m, ImageUrl = "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&h=300&fit=crop", RestaurantId = 8 }
             };
 
             return foodItems.FirstOrDefault(f => f.Id == foodItemId) ?? new FoodItem();

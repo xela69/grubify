@@ -227,6 +227,138 @@ namespace GrubifyApi.Controllers
                 IsSpicy = false,
                 RestaurantId = 5,
                 PreparationTime = 20
+            },
+
+            // Golden Dragon (Chinese) items
+            new FoodItem
+            {
+                Id = 16,
+                Name = "Kung Pao Chicken",
+                Description = "Wok-fired chicken with peanuts, chili, and Sichuan peppercorns",
+                Price = 15.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop",
+                Category = "Main",
+                IsVegetarian = false,
+                IsVegan = false,
+                IsSpicy = true,
+                RestaurantId = 6,
+                PreparationTime = 20
+            },
+            new FoodItem
+            {
+                Id = 17,
+                Name = "Vegetable Spring Rolls",
+                Description = "Crispy rolls filled with cabbage, carrot, and glass noodles",
+                Price = 6.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=400&h=300&fit=crop",
+                Category = "Appetizer",
+                IsVegetarian = true,
+                IsVegan = true,
+                IsSpicy = false,
+                RestaurantId = 6,
+                PreparationTime = 12
+            },
+            new FoodItem
+            {
+                Id = 18,
+                Name = "Beef Chow Mein",
+                Description = "Stir-fried egg noodles with beef and crisp vegetables",
+                Price = 14.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=400&h=300&fit=crop",
+                Category = "Noodles",
+                IsVegetarian = false,
+                IsVegan = false,
+                IsSpicy = false,
+                RestaurantId = 6,
+                PreparationTime = 18
+            },
+
+            // El Mariachi (Mexican) items
+            new FoodItem
+            {
+                Id = 19,
+                Name = "Chicken Tacos",
+                Description = "Three soft corn tacos with grilled chicken, salsa, and lime",
+                Price = 11.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1611250188496-e966043a0629?w=400&h=300&fit=crop",
+                Category = "Tacos",
+                IsVegetarian = false,
+                IsVegan = false,
+                IsSpicy = true,
+                RestaurantId = 7,
+                PreparationTime = 15
+            },
+            new FoodItem
+            {
+                Id = 20,
+                Name = "Beef Burrito",
+                Description = "Large flour tortilla stuffed with beef, rice, beans, and cheese",
+                Price = 13.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400&h=300&fit=crop",
+                Category = "Burrito",
+                IsVegetarian = false,
+                IsVegan = false,
+                IsSpicy = false,
+                RestaurantId = 7,
+                PreparationTime = 15
+            },
+            new FoodItem
+            {
+                Id = 21,
+                Name = "Guacamole & Chips",
+                Description = "Fresh-made guacamole with warm tortilla chips",
+                Price = 7.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=400&h=300&fit=crop",
+                Category = "Appetizer",
+                IsVegetarian = true,
+                IsVegan = true,
+                IsSpicy = false,
+                RestaurantId = 7,
+                PreparationTime = 8
+            },
+
+            // Bangkok Thai (Thai) items
+            new FoodItem
+            {
+                Id = 22,
+                Name = "Pad Thai",
+                Description = "Stir-fried rice noodles with shrimp, peanuts, and tamarind",
+                Price = 16.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1637806930600-37fa8892069d?w=400&h=300&fit=crop",
+                Category = "Noodles",
+                IsVegetarian = false,
+                IsVegan = false,
+                IsSpicy = true,
+                RestaurantId = 8,
+                PreparationTime = 20
+            },
+            new FoodItem
+            {
+                Id = 23,
+                Name = "Green Curry",
+                Description = "Coconut green curry with chicken, bamboo, and Thai basil",
+                Price = 17.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop",
+                Category = "Curry",
+                IsVegetarian = false,
+                IsVegan = false,
+                IsSpicy = true,
+                RestaurantId = 8,
+                PreparationTime = 25
+            },
+            new FoodItem
+            {
+                Id = 24,
+                Name = "Thai Spring Rolls",
+                Description = "Fresh rolls with vermicelli, herbs, and sweet chili dip",
+                Price = 6.99m,
+                ImageUrl = "https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&h=300&fit=crop",
+                Category = "Appetizer",
+                IsVegetarian = true,
+                IsVegan = false,
+                IsSpicy = false,
+                RestaurantId = 8,
+                PreparationTime = 10
             }
         };
 
