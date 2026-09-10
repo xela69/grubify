@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GrubifyApi.Models;
+using GrubifyApi.Chaos;
 
 namespace GrubifyApi.Controllers
 {
@@ -25,47 +26,25 @@ namespace GrubifyApi.Controllers
 
         private PaymentResult ProcessPayment(string paymentMethod)
         {
-            if (_isV2Version)
+            // Payment succeeds by default. The CHAOS_PAYMENT_FAIL toggle simulates a
+            // gateway outage for SRE incident demos.
+            if (ChaosConfig.PaymentFailEnabled)
             {
-                // V2: BUG - Payment gateway configuration is incorrect in production
-                // This was supposed to be fixed in the last deployment but got missed
-                var gatewayUrl = GetPaymentGatewayUrlV2();
-                
-                Console.WriteLine($"V2: Attempting payment processing with gateway: {gatewayUrl}");
-                
-                // Connection always fails due to wrong endpoint
-                return new PaymentResult 
-                { 
-                    Success = false, 
-                    ErrorMessage = "Connection to payment gateway timed out" 
+                const string gatewayUrl = "https://payment-gateway-staging.internal.com/v1/process";
+                Console.WriteLine($"[chaos] payment-fail: gateway {gatewayUrl} unreachable");
+                return new PaymentResult
+                {
+                    Success = false,
+                    ErrorMessage = "Connection to payment gateway timed out"
                 };
             }
-            else
-            {
-                // V1: Working payment processing
-                var gatewayUrl = GetPaymentGatewayUrlV1();
-                
-                Console.WriteLine($"V1: Processing payment successfully with gateway: {gatewayUrl}");
-                
-                // Simulate successful payment processing
-                return new PaymentResult 
-                { 
-                    Success = true, 
-                    ErrorMessage = string.Empty 
-                };
-            }
-        }
 
-        private string GetPaymentGatewayUrlV1()
-        {
-            // V1: Correct production payment gateway URL
-            return "https://payment-gateway-prod.grubify.com/v1/process";
-        }
-        
-        private string GetPaymentGatewayUrlV2()
-        {
-            // V2: Wrong URL that doesn't exist (bug introduced in v2)
-            return "https://payment-gateway-staging.internal.com/v1/process";
+            Console.WriteLine("Payment processed successfully via https://payment-gateway-prod.grubify.com/v1/process");
+            return new PaymentResult
+            {
+                Success = true,
+                ErrorMessage = string.Empty
+            };
         }
 
         [HttpPost]

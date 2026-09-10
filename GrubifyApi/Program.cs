@@ -7,6 +7,9 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Application Insights — consumes APPLICATIONINSIGHTS_CONNECTION_STRING when present.
+builder.Services.AddApplicationInsightsTelemetry();
+
 // Configure forwarded headers for Azure Container Apps
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -53,6 +56,9 @@ var app = builder.Build();
 
 // Use forwarded headers for Azure Container Apps
 app.UseForwardedHeaders();
+
+// Chaos fault injection (no-op unless CHAOS_* env vars are set).
+app.UseMiddleware<GrubifyApi.Middleware.ChaosMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

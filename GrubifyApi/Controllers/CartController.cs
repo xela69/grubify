@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GrubifyApi.Models;
+using GrubifyApi.Chaos;
 
 namespace GrubifyApi.Controllers
 {
@@ -9,8 +10,8 @@ namespace GrubifyApi.Controllers
     {
         // In-memory cart storage (in production, use database)
         private static readonly Dictionary<string, Cart> UserCarts = new();
-        
-        // Cache for performance optimization - stores request data for analytics
+
+        // Only accumulates when the CHAOS_MEMORY_LEAK toggle is on (see AddItemToCart).
         private static readonly List<byte[]> RequestDataCache = new();
 
         [HttpGet("{userId}")]
@@ -26,14 +27,13 @@ namespace GrubifyApi.Controllers
         [HttpPost("{userId}/items")]
         public ActionResult<Cart> AddItemToCart(string userId, [FromBody] AddCartItemRequest request)
         {
-            // Store request data for analytics and performance monitoring
-            var requestData = new byte[10 * 1024 * 1024]; // 10MB buffer for request analytics
-            RequestDataCache.Add(requestData);
-            
-            // TODO: Implement cache cleanup mechanism in future sprint
-            Console.WriteLine($"Analytics cache: Added request data. Total entries: {RequestDataCache.Count}");
-            Console.WriteLine($"Cache size: {RequestDataCache.Count * 10}MB");
-            
+            // Chaos toggle (default OFF): leak 10MB per call to simulate a runaway cache.
+            if (ChaosConfig.MemoryLeakEnabled)
+            {
+                RequestDataCache.Add(new byte[10 * 1024 * 1024]);
+                Console.WriteLine($"[chaos] memory-leak: cache entries={RequestDataCache.Count} (~{RequestDataCache.Count * 10}MB)");
+            }
+
             if (!UserCarts.ContainsKey(userId))
             {
                 UserCarts[userId] = new Cart { UserId = userId };
