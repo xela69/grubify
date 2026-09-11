@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using GrubifyApi.Data;
 using GrubifyApi.Models;
 
 namespace GrubifyApi.Controllers
@@ -7,7 +9,11 @@ namespace GrubifyApi.Controllers
     [Route("api/[controller]")]
     public class FoodItemsController : ControllerBase
     {
-        private static readonly List<FoodItem> FoodItems = new()
+        private readonly GrubifyDbContext _db;
+        public FoodItemsController(GrubifyDbContext db) => _db = db;
+
+        // Seed catalog — inserted into Azure SQL on first startup (see Program.cs).
+        public static readonly List<FoodItem> Seed = new()
         {
             // Tony's Italian Bistro items
             new FoodItem
@@ -363,15 +369,15 @@ namespace GrubifyApi.Controllers
         };
 
         [HttpGet]
-        public ActionResult<IEnumerable<FoodItem>> GetFoodItems()
+        public async Task<ActionResult<IEnumerable<FoodItem>>> GetFoodItems()
         {
-            return Ok(FoodItems);
+            return Ok(await _db.FoodItems.ToListAsync());
         }
 
         [HttpGet("{id}")]
-        public ActionResult<FoodItem> GetFoodItem(int id)
+        public async Task<ActionResult<FoodItem>> GetFoodItem(int id)
         {
-            var foodItem = FoodItems.FirstOrDefault(f => f.Id == id);
+            var foodItem = await _db.FoodItems.FindAsync(id);
             if (foodItem == null)
             {
                 return NotFound();
@@ -380,43 +386,42 @@ namespace GrubifyApi.Controllers
         }
 
         [HttpGet("restaurant/{restaurantId}")]
-        public ActionResult<IEnumerable<FoodItem>> GetFoodItemsByRestaurant(int restaurantId)
+        public async Task<ActionResult<IEnumerable<FoodItem>>> GetFoodItemsByRestaurant(int restaurantId)
         {
-            var items = FoodItems.Where(f => f.RestaurantId == restaurantId).ToList();
+            var items = await _db.FoodItems.Where(f => f.RestaurantId == restaurantId).ToListAsync();
             return Ok(items);
         }
 
         [HttpGet("category/{category}")]
-        public ActionResult<IEnumerable<FoodItem>> GetFoodItemsByCategory(string category)
+        public async Task<ActionResult<IEnumerable<FoodItem>>> GetFoodItemsByCategory(string category)
         {
-            var items = FoodItems.Where(f => 
-                f.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
+            var items = await _db.FoodItems.Where(f => f.Category == category).ToListAsync();
             return Ok(items);
         }
 
         [HttpGet("search")]
-        public ActionResult<IEnumerable<FoodItem>> SearchFoodItems([FromQuery] string query)
+        public async Task<ActionResult<IEnumerable<FoodItem>>> SearchFoodItems([FromQuery] string query)
         {
             if (string.IsNullOrEmpty(query))
             {
-                return Ok(FoodItems);
+                return Ok(await _db.FoodItems.ToListAsync());
             }
 
-            var items = FoodItems.Where(f => 
-                f.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                f.Description.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                f.Category.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-            
+            var items = await _db.FoodItems.Where(f =>
+                f.Name.Contains(query) ||
+                f.Description.Contains(query) ||
+                f.Category.Contains(query)).ToListAsync();
+
             return Ok(items);
         }
 
         [HttpGet("dietary")]
-        public ActionResult<IEnumerable<FoodItem>> GetFoodItemsByDietaryPreference(
+        public async Task<ActionResult<IEnumerable<FoodItem>>> GetFoodItemsByDietaryPreference(
             [FromQuery] bool? isVegetarian = null,
             [FromQuery] bool? isVegan = null,
             [FromQuery] bool? isSpicy = null)
         {
-            var items = FoodItems.AsQueryable();
+            var items = _db.FoodItems.AsQueryable();
 
             if (isVegetarian.HasValue)
                 items = items.Where(f => f.IsVegetarian == isVegetarian.Value);
@@ -427,7 +432,7 @@ namespace GrubifyApi.Controllers
             if (isSpicy.HasValue)
                 items = items.Where(f => f.IsSpicy == isSpicy.Value);
 
-            return Ok(items.ToList());
+            return Ok(await items.ToListAsync());
         }
     }
 }

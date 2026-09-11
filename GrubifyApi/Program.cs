@@ -1,9 +1,15 @@
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
+using GrubifyApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Azure SQL persistence — connection string injected via ConnectionStrings__DefaultConnection.
+builder.Services.AddDbContext<GrubifyDbContext>(o =>
+    o.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -53,6 +59,28 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Create schema and seed the catalog on first startup. Wrapped so a SQL outage
+// degrades (catalog endpoints error) rather than crash-looping the container.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<GrubifyDbContext>();
+    try
+    {
+        db.Database.EnsureCreated();
+        if (!db.Restaurants.Any())
+        {
+            db.Restaurants.AddRange(GrubifyApi.Controllers.RestaurantsController.Seed);
+            db.FoodItems.AddRange(GrubifyApi.Controllers.FoodItemsController.Seed);
+            db.SaveChanges();
+            Console.WriteLine($"[seed] Seeded {db.Restaurants.Count()} restaurants, {db.FoodItems.Count()} food items.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[seed] SQL init skipped/failed: {ex.Message}");
+    }
+}
 
 // Use forwarded headers for Azure Container Apps
 app.UseForwardedHeaders();

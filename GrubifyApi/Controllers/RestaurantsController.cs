@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using GrubifyApi.Data;
 using GrubifyApi.Models;
 
 namespace GrubifyApi.Controllers
@@ -7,7 +9,11 @@ namespace GrubifyApi.Controllers
     [Route("api/[controller]")]
     public class RestaurantsController : ControllerBase
     {
-        private static readonly List<Restaurant> Restaurants = new()
+        private readonly GrubifyDbContext _db;
+        public RestaurantsController(GrubifyDbContext db) => _db = db;
+
+        // Seed catalog — inserted into Azure SQL on first startup (see Program.cs).
+        public static readonly List<Restaurant> Seed = new()
         {
             new Restaurant
             {
@@ -124,15 +130,15 @@ namespace GrubifyApi.Controllers
         };
 
         [HttpGet]
-        public ActionResult<IEnumerable<Restaurant>> GetRestaurants()
+        public async Task<ActionResult<IEnumerable<Restaurant>>> GetRestaurants()
         {
-            return Ok(Restaurants);
+            return Ok(await _db.Restaurants.ToListAsync());
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Restaurant> GetRestaurant(int id)
+        public async Task<ActionResult<Restaurant>> GetRestaurant(int id)
         {
-            var restaurant = Restaurants.FirstOrDefault(r => r.Id == id);
+            var restaurant = await _db.Restaurants.FindAsync(id);
             if (restaurant == null)
             {
                 return NotFound();
@@ -141,26 +147,27 @@ namespace GrubifyApi.Controllers
         }
 
         [HttpGet("cuisine/{cuisineType}")]
-        public ActionResult<IEnumerable<Restaurant>> GetRestaurantsByCuisine(string cuisineType)
+        public async Task<ActionResult<IEnumerable<Restaurant>>> GetRestaurantsByCuisine(string cuisineType)
         {
-            var restaurants = Restaurants.Where(r => 
-                r.CuisineType.Equals(cuisineType, StringComparison.OrdinalIgnoreCase)).ToList();
+            // SQL Server default collation is case-insensitive.
+            var restaurants = await _db.Restaurants
+                .Where(r => r.CuisineType == cuisineType).ToListAsync();
             return Ok(restaurants);
         }
 
         [HttpGet("search")]
-        public ActionResult<IEnumerable<Restaurant>> SearchRestaurants([FromQuery] string query)
+        public async Task<ActionResult<IEnumerable<Restaurant>>> SearchRestaurants([FromQuery] string query)
         {
             if (string.IsNullOrEmpty(query))
             {
-                return Ok(Restaurants);
+                return Ok(await _db.Restaurants.ToListAsync());
             }
 
-            var restaurants = Restaurants.Where(r => 
-                r.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                r.CuisineType.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                r.Description.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-            
+            var restaurants = await _db.Restaurants.Where(r =>
+                r.Name.Contains(query) ||
+                r.CuisineType.Contains(query) ||
+                r.Description.Contains(query)).ToListAsync();
+
             return Ok(restaurants);
         }
     }
