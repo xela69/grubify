@@ -193,7 +193,7 @@ const RestaurantPage: React.FC = () => {
             }}
           >
             {items.map((item) => (
-              <Card key={item.id} sx={{ display: 'flex', height: 200 }}>
+              <Card key={item.id} sx={{ display: 'flex', minHeight: 200 }}>
                 <CardMedia
                   component="img"
                   sx={{ width: 150, objectFit: 'cover' }}
