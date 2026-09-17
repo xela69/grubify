@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.ApplicationInsights;
 using GrubifyApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,7 +69,21 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// One-time egress diagnostic: probe the App Insights ingestion endpoint so we can
+// Manual telemetry probe: isolates whether the channel + egress + connstr work,
+// independent of auto-collection (request tracking) modules.
+try
+{
+    var tc = app.Services.GetRequiredService<TelemetryClient>();
+    tc.TrackTrace("[startup-probe] manual telemetry test");
+    tc.Flush();
+    Console.WriteLine("[ai-manual] TrackTrace + Flush called");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[ai-manual] FAILED {ex.GetType().Name}: {ex.Message}");
+}
+
+// One-time egress diagnostic: probe the App Insights ingestion endpoint to
 // confirm from container logs whether telemetry can actually reach Azure Monitor.
 _ = Task.Run(async () =>
 {
