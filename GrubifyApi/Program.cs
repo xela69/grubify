@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.ApplicationInsights;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using GrubifyApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,16 +14,16 @@ builder.Services.AddDbContext<GrubifyDbContext>(o =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-// Application Insights — consumes APPLICATIONINSIGHTS_CONNECTION_STRING when present.
+// Observability via the Azure Monitor OpenTelemetry Distro. The classic
+// Microsoft.ApplicationInsights.AspNetCore SDK does not auto-collect on .NET 9
+// (TelemetryClient is never registered), so this distro is the supported path.
+// UseAzureMonitor() reads APPLICATIONINSIGHTS_CONNECTION_STRING and auto-collects
+// incoming requests, outgoing HTTP dependencies, and ILogger logs.
 var aiConnString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-builder.Services.AddApplicationInsightsTelemetry(options =>
+if (!string.IsNullOrWhiteSpace(aiConnString))
 {
-    if (!string.IsNullOrWhiteSpace(aiConnString))
-    {
-        options.ConnectionString = aiConnString;
-    }
-});
-Console.WriteLine($"[appinsights] configured={!string.IsNullOrWhiteSpace(aiConnString)} connStringLen={(aiConnString?.Length ?? 0)}");
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
+}
 
 // Configure forwarded headers for Azure Container Apps
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -68,48 +68,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
-// Manual telemetry probe: isolates whether the channel + egress + connstr work,
-// independent of auto-collection (request tracking) modules.
-try
-{
-    var tc = app.Services.GetRequiredService<TelemetryClient>();
-    tc.TrackTrace("[startup-probe] manual telemetry test");
-    tc.Flush();
-    Console.WriteLine("[ai-manual] TrackTrace + Flush called");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"[ai-manual] FAILED {ex.GetType().Name}: {ex.Message}");
-}
-
-// One-time egress diagnostic: probe the App Insights ingestion endpoint to
-// confirm from container logs whether telemetry can actually reach Azure Monitor.
-_ = Task.Run(async () =>
-{
-    try
-    {
-        var endpoint = "https://dc.services.visualstudio.com/";
-        if (!string.IsNullOrWhiteSpace(aiConnString))
-        {
-            foreach (var part in aiConnString.Split(';'))
-            {
-                if (part.StartsWith("IngestionEndpoint=", StringComparison.OrdinalIgnoreCase))
-                {
-                    endpoint = part.Substring("IngestionEndpoint=".Length);
-                    break;
-                }
-            }
-        }
-        using var probe = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-        var resp = await probe.GetAsync(endpoint);
-        Console.WriteLine($"[ai-egress] endpoint={endpoint} reachable status={(int)resp.StatusCode}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[ai-egress] FAILED {ex.GetType().Name}: {ex.Message}");
-    }
-});
 
 // Create schema and seed the catalog on first startup. Wrapped so a SQL outage
 // degrades (catalog endpoints error) rather than crash-looping the container.
