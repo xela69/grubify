@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using GrubifyApi.Data;
 
@@ -17,12 +18,18 @@ builder.Services.AddOpenApi();
 // Observability via the Azure Monitor OpenTelemetry Distro. The classic
 // Microsoft.ApplicationInsights.AspNetCore SDK does not auto-collect on .NET 9
 // (TelemetryClient is never registered), so this distro is the supported path.
-// UseAzureMonitor() reads APPLICATIONINSIGHTS_CONNECTION_STRING and auto-collects
-// incoming requests, outgoing HTTP dependencies, and ILogger logs.
+// The target App Insights has DisableLocalAuth=true, so telemetry must be
+// ingested with a Microsoft Entra credential (the app's user-assigned managed
+// identity, selected via the AZURE_CLIENT_ID env var) rather than the
+// connection string's instrumentation key. UseAzureMonitor() still reads the
+// endpoint from APPLICATIONINSIGHTS_CONNECTION_STRING.
 var aiConnString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
 if (!string.IsNullOrWhiteSpace(aiConnString))
 {
-    builder.Services.AddOpenTelemetry().UseAzureMonitor();
+    builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+    {
+        options.Credential = new DefaultAzureCredential();
+    });
 }
 
 // Configure forwarded headers for Azure Container Apps
