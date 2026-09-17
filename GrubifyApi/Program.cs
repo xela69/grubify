@@ -14,7 +14,15 @@ builder.Services.AddDbContext<GrubifyDbContext>(o =>
 builder.Services.AddOpenApi();
 
 // Application Insights — consumes APPLICATIONINSIGHTS_CONNECTION_STRING when present.
-builder.Services.AddApplicationInsightsTelemetry();
+var aiConnString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+builder.Services.AddApplicationInsightsTelemetry(options =>
+{
+    if (!string.IsNullOrWhiteSpace(aiConnString))
+    {
+        options.ConnectionString = aiConnString;
+    }
+});
+Console.WriteLine($"[appinsights] configured={!string.IsNullOrWhiteSpace(aiConnString)} connStringLen={(aiConnString?.Length ?? 0)}");
 
 // Configure forwarded headers for Azure Container Apps
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -59,6 +67,34 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// One-time egress diagnostic: probe the App Insights ingestion endpoint so we can
+// confirm from container logs whether telemetry can actually reach Azure Monitor.
+_ = Task.Run(async () =>
+{
+    try
+    {
+        var endpoint = "https://dc.services.visualstudio.com/";
+        if (!string.IsNullOrWhiteSpace(aiConnString))
+        {
+            foreach (var part in aiConnString.Split(';'))
+            {
+                if (part.StartsWith("IngestionEndpoint=", StringComparison.OrdinalIgnoreCase))
+                {
+                    endpoint = part.Substring("IngestionEndpoint=".Length);
+                    break;
+                }
+            }
+        }
+        using var probe = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        var resp = await probe.GetAsync(endpoint);
+        Console.WriteLine($"[ai-egress] endpoint={endpoint} reachable status={(int)resp.StatusCode}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ai-egress] FAILED {ex.GetType().Name}: {ex.Message}");
+    }
+});
 
 // Create schema and seed the catalog on first startup. Wrapped so a SQL outage
 // degrades (catalog endpoints error) rather than crash-looping the container.
