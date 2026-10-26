@@ -7,6 +7,13 @@ namespace GrubifyApi.Chaos;
 public static class ChaosConfig
 {
     public static bool MemoryLeakEnabled => GetBool("CHAOS_MEMORY_LEAK");
+
+    // Upper bound for the simulated leak. Keeps the fault observable (memory climbs)
+    // without letting it reach the .NET GC heap hard limit (~75% of the container
+    // memory limit), where every allocation starts throwing OutOfMemoryException.
+    public const int DefaultMemoryLeakMaxMb = 512;
+    public static int MemoryLeakMaxMb =>
+        GetInt("CHAOS_MEMORY_LEAK_MAX_MB") is var v && v > 0 ? v : DefaultMemoryLeakMaxMb;
     public static bool PaymentFailEnabled => GetBool("CHAOS_PAYMENT_FAIL");
     public static bool CpuSpinEnabled => GetBool("CHAOS_CPU_SPIN");
     public static int LatencyMs => GetInt("CHAOS_LATENCY_MS");

@@ -16,7 +16,12 @@ namespace GrubifyApi.Controllers
         private static readonly Dictionary<string, Cart> UserCarts = new();
 
         // Only accumulates when the CHAOS_MEMORY_LEAK toggle is on (see AddItemToCart).
+        // Bounded by CHAOS_MEMORY_LEAK_MAX_MB and guarded by a lock because the
+        // controller is hit concurrently.
         private static readonly List<byte[]> RequestDataCache = new();
+        private static readonly object RequestDataCacheLock = new();
+        private static bool _leakCapLogged;
+        private const int LeakChunkMb = 10;
 
         [HttpGet("{userId}")]
         public ActionResult<Cart> GetCart(string userId)
@@ -31,11 +36,11 @@ namespace GrubifyApi.Controllers
         [HttpPost("{userId}/items")]
         public ActionResult<Cart> AddItemToCart(string userId, [FromBody] AddCartItemRequest request)
         {
-            // Chaos toggle (default OFF): leak 10MB per call to simulate a runaway cache.
+            // Chaos toggle (default OFF): leak 10MB per call to simulate a runaway cache,
+            // capped so the fault can never take down the add-to-cart path with OOM.
             if (ChaosConfig.MemoryLeakEnabled)
             {
-                RequestDataCache.Add(new byte[10 * 1024 * 1024]);
-                Console.WriteLine($"[chaos] memory-leak: cache entries={RequestDataCache.Count} (~{RequestDataCache.Count * 10}MB)");
+                LeakChaosMemory();
             }
 
             if (!UserCarts.ContainsKey(userId))
@@ -117,6 +122,27 @@ namespace GrubifyApi.Controllers
                 UserCarts[userId].Items.Clear();
             }
             return Ok();
+        }
+
+        private static void LeakChaosMemory()
+        {
+            var capMb = ChaosConfig.MemoryLeakMaxMb;
+            lock (RequestDataCacheLock)
+            {
+                var currentMb = RequestDataCache.Count * LeakChunkMb;
+                if (currentMb + LeakChunkMb > capMb)
+                {
+                    if (!_leakCapLogged)
+                    {
+                        _leakCapLogged = true;
+                        Console.WriteLine($"[chaos] memory-leak: cap reached (~{currentMb}MB of {capMb}MB), no further allocation");
+                    }
+                    return;
+                }
+
+                RequestDataCache.Add(new byte[LeakChunkMb * 1024 * 1024]);
+                Console.WriteLine($"[chaos] memory-leak: cache entries={RequestDataCache.Count} (~{RequestDataCache.Count * LeakChunkMb}MB, cap {capMb}MB)");
+            }
         }
 
         // Resolves a food item from Azure SQL for cart line details.
